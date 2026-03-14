@@ -17,9 +17,9 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         \App\Models\User::factory()->create([
-        'name' => 'Ahmed BENSEIDI',
-        'email' => 'ahmedbenseidi@admin.com',
-        'password' => bcrypt('z/e@r8$4çuèDaF_àef65VF'), // تأكد من تغيير كلمة المرور
+        'name' => env('ADMIN_USERNAME','Admin'),
+        'email' => env('ADMIN_EMAIL', 'admin@example.com'), // يجلب القيمة من .env
+        'password' => bcrypt(env('ADMIN_PASSWORD', 'password123')), // يجلب كلمة المرور من .env
     ]);
     }
 }
