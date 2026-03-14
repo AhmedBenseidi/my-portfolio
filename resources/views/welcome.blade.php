@@ -7,6 +7,7 @@
     {{-- Livewire 3 يقوم بحقن الستاين والسكريبت تلقائياً، ولكن لا بأس بتركها --}}
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 
 <body

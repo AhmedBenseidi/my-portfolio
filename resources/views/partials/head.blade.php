@@ -1,6 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+{!! SEO::generate() !!}
+<link rel="icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
 <title>Portfolio | {{ strtoupper(app()->getLocale()) }}</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
