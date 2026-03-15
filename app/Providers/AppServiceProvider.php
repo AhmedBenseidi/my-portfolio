@@ -21,17 +21,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // مشاركة متغير اللغة مع جميع القوالب
+        // مشاركة متغير اللغة
         view()->share('isAr', app()->getLocale() == 'ar');
 
-        // إعدادات بيئة الإنتاج (Production) على Railway
         if (app()->environment('production')) {
-            // 1. إجبار استخدام HTTPS لحل مشكلة التنسيقات (CSS)
+            // 1. إجبار HTTPS لحل مشكلة التنسيقات
             URL::forceScheme('https');
 
-            // 2. إجبار Livewire على استخدام Cloudinary للملفات المؤقتة
-            // هذا سيحل خطأ "failed to upload" الذي يظهر لك في Filament
+            // 2. إجبار Livewire على استخدام Cloudinary للرفع المؤقت
             Config::set('livewire.temporary_file_upload.disk', 'cloudinary');
+
+            // 3. تحديد المجلد المؤقت في كلواديناري
+            Config::set('livewire.temporary_file_upload.directory', 'livewire-tmp');
         }
     }
 }
