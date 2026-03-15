@@ -24,7 +24,7 @@ return [
     | may even configure multiple disks for the same driver. Examples for
     | most supported storage drivers are configured here for reference.
     |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
+    | Supported drivers: "local", "ftp", "sftp", "s3", "cloudinary"
     |
     */
 
@@ -45,6 +45,11 @@ return [
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
+        ],
+
+        // إعدادات كلواديناري التي أضفناها
+        'cloudinary' => [
+            'driver' => 'cloudinary',
         ],
 
         's3' => [
