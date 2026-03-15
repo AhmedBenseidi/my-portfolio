@@ -41,11 +41,18 @@ class ProjectResource extends Resource
                             ->label('الوصف')
                             ->required()
                             ->columnSpanFull(),
+
+                        // التعديل هنا لضمان التوافق التام مع Cloudinary
                         FileUpload::make('thumbnail')
+                            ->label('صورة المشروع')
                             ->image()
-                            ->disk('cloudinary') // نخبره صراحة باستخدام كلواديناري
+                            ->disk('cloudinary')
                             ->directory('projects')
+                            ->visibility('public') // أضفنا الصلاحية العامة
+                            ->moveFiles() // يساعد في استقرار الرفع على السيرفرات السحابية
+                            ->imageEditor() // إضافة ميزة تعديل الصورة اختيارياً
                             ->required(),
+
                         TagsInput::make('tags')
                             ->label('التقنيات المستخدمة')
                             ->placeholder('أضف تقنية ثم اضغط Enter'),
@@ -57,15 +64,18 @@ class ProjectResource extends Resource
     {
         return $table
             ->columns([
+                // التعديل هنا: يجب إخبار العمود أن الصور مخزنة في cloudinary ليظهرها
                 ImageColumn::make('thumbnail')
-                    ->label('الصورة'),
+                    ->label('الصورة')
+                    ->disk('cloudinary'),
+
                 TextColumn::make('title')
                     ->label('العنوان')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('tags')
                     ->label('التقنيات')
-                    ->badge(), // سيعرض التاغات على شكل أزرار ملونة صغيرة
+                    ->badge(),
                 TextColumn::make('created_at')
                     ->label('تاريخ الإضافة')
                     ->dateTime()
