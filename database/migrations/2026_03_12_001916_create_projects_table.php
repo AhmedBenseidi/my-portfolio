@@ -13,11 +13,23 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->string('title');            // عنوان المشروع
-            $table->text('description');      // وصف المشروع
-            $table->string('thumbnail');       // صورة للمشروع
-            $table->string('link')->nullable(); // رابط المشروع أو GitHub
-            $table->json('tags');              // التقنيات المستخدمة (Array)
+
+            // عنوان المشروع
+            $table->string('title');
+
+            // وصف المشروع
+            $table->string('thumbnail')->nullable()->after('description');
+
+            // رابط الصورة من Cloudinary (نصي)
+            $table->string('thumbnail');
+
+            // رابط خارجي (GitHub أو موقع المشروع)
+            $table->string('link')->nullable();
+
+            // التقنيات المستخدمة (نخزنها كـ JSON Array)
+            $table->json('tags');
+
+            // تاريخ الإنشاء والتعديل
             $table->timestamps();
         });
     }
@@ -27,6 +39,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('projects');
+           Schema::table('projects', function (Blueprint $table) {
+            $table->dropColumn('thumbnail');
+        });
     }
 };

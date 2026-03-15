@@ -104,6 +104,16 @@ return [
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
+'   providers' => [
+    /*
+     * Laravel Framework Service Providers...
+     */
+
+    /*
+     * Package Service Providers...
+     */
+    CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------

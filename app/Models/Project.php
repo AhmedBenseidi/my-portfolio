@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class Project extends Model
 {
     protected $fillable = [
         'title',
+        'link',
         'description',
         'thumbnail',
-        'link',
         'tags',
     ];
 
@@ -20,16 +21,27 @@ class Project extends Model
     ];
 
     /**
-     * دالة اختيارية (Accessor) لضمان الحصول على رابط الصورة كاملاً
-     * ستساعدك في عرض الصور في الـ Frontend (الموقع الخارجي)
+     * Mutator لحقل thumbnail
+     * - إذا وصل UploadedFile نخزّنه مؤقتًا في disk public ونخزن المسار.
+     * - إذا وصل رابط (http/https) نخزّنه كما هو.
+     * - إذا وصل مسار نصي محلي (مثال uploads/projects/xyz.jpg) نخزّنه كما هو.
      */
-    public function getThumbnailUrlAttribute()
+    public function setThumbnailAttribute($value)
     {
-        if (!$this->thumbnail) {
-            return asset('images/placeholder.png'); // صورة افتراضية في حال عدم وجود صورة
+        // حالة: ملف مرفوع مباشرة
+        if ($value instanceof UploadedFile) {
+            $path = $value->store('uploads/projects', 'public');
+            $this->attributes['thumbnail'] = $path;
+            return;
         }
 
-        // إذا كانت الصورة مخزنة على كلواديناري، سيعيد الرابط السحابي
-        return Storage::disk('cloudinary')->url($this->thumbnail);
+        // حالة: رابط كامل من Cloudinary أو أي CDN
+        if (is_string($value) && (str_starts_with($value, 'http://') || str_starts_with($value, 'https://'))) {
+            $this->attributes['thumbnail'] = $value;
+            return;
+        }
+
+        // حالة: مسار نصي داخل التخزين العام أو قيمة فارغة
+        $this->attributes['thumbnail'] = $value;
     }
 }

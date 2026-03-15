@@ -34,28 +34,34 @@ class ProjectResource extends Resource
                         TextInput::make('title')
                             ->label('عنوان المشروع')
                             ->required(),
+
                         TextInput::make('link')
                             ->label('رابط المشروع')
-                            ->url(),
+                            ->url()
+                            ->nullable(),
+
                         Textarea::make('description')
                             ->label('الوصف')
                             ->required()
                             ->columnSpanFull(),
 
-                        // التعديل هنا لضمان التوافق التام مع Cloudinary
+                        // FileUpload يخزن مؤقتًا في disk public ثم نرفع إلى Cloudinary في صفحات Create/Edit
                         FileUpload::make('thumbnail')
                             ->label('صورة المشروع')
                             ->image()
-                            ->disk('cloudinary')
-                            ->directory('projects')
-                            ->visibility('public') // أضفنا الصلاحية العامة
-                            ->moveFiles() // يساعد في استقرار الرفع على السيرفرات السحابية
-                            ->imageEditor() // إضافة ميزة تعديل الصورة اختيارياً
+                            ->disk('public')
+                            ->directory('uploads/projects')
+                            ->preserveFilenames()
+                            ->visibility('public')
+                            ->maxSize(2048) // 2MB حد أقصى (يمكن تغييره)
+                            ->imagePreviewHeight(120)
                             ->required(),
 
                         TagsInput::make('tags')
                             ->label('التقنيات المستخدمة')
-                            ->placeholder('أضف تقنية ثم اضغط Enter'),
+                            ->placeholder('أضف تقنية ثم اضغط Enter')
+                            ->separator(',')
+                            ->hint('يمكن إضافة عدة تقنيات'),
                     ])->columns(2)
             ]);
     }
@@ -64,25 +70,37 @@ class ProjectResource extends Resource
     {
         return $table
             ->columns([
-                // التعديل هنا: يجب إخبار العمود أن الصور مخزنة في cloudinary ليظهرها
+                // ImageColumn يعرض الصورة سواء كانت رابط Cloudinary أو مسار محلي
                 ImageColumn::make('thumbnail')
                     ->label('الصورة')
-                    ->disk('cloudinary'),
+                    ->getStateUsing(function ($record) {
+                        // إذا الحقل يحتوي على رابط كامل (http/https) نعرضه مباشرة
+                        $value = $record->thumbnail ?? null;
+                        if (! $value) {
+                            return null;
+                        }
+                        if (is_string($value) && (str_starts_with($value, 'http://') || str_starts_with($value, 'https://'))) {
+                            return $value;
+                        }
+                        // وإلا نفترض أنه مسار داخل disk public
+                        return $value ? asset('storage/' . ltrim($value, '/')) : null;
+                    })
+                    ->rounded(),
 
                 TextColumn::make('title')
                     ->label('العنوان')
                     ->searchable()
                     ->sortable(),
+
                 TextColumn::make('tags')
                     ->label('التقنيات')
-                    ->badge(),
+                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
+                    ->toggleable(),
+
                 TextColumn::make('created_at')
                     ->label('تاريخ الإضافة')
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
