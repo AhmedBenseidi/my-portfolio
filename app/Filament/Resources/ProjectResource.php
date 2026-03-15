@@ -42,9 +42,10 @@ class ProjectResource extends Resource
                             ->required()
                             ->columnSpanFull(),
                         FileUpload::make('thumbnail')
-                            ->label('صورة المشروع')
                             ->image()
-                            ->directory('projects'),
+                            ->disk('cloudinary') // نخبره صراحة باستخدام كلواديناري
+                            ->directory('projects')
+                            ->required(),
                         TagsInput::make('tags')
                             ->label('التقنيات المستخدمة')
                             ->placeholder('أضف تقنية ثم اضغط Enter'),
