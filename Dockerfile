@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# تثبيت الاعتمادات وتثبيت Node.js لعمل بناء لملفات Vite
+# تثبيت الاعتمادات وتثبيت Node.js
 RUN apt-get update && apt-get install -y \
     nginx \
     libpng-dev \
@@ -24,24 +24,21 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# تثبيت مكتبات NPM وبناء ملفات Vite (هذا الجزء هو الذي سيحل المشكلة)
-RUN npm install
-RUN npm run build
+# بناء ملفات Vite (لحل مشكلة الـ Manifest)
+RUN npm install && npm run build
 
-# إعداد الصلاحيات و Nginx
+# إنشاء المجلدات المؤقتة ومنح الصلاحيات (حل مشكلة الرفع)
+RUN mkdir -p /var/www/html/storage/app/public \
+    && mkdir -p /var/www/html/storage/app/livewire-tmp \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+
+# إعداد Nginx
 COPY nginx.conf /etc/nginx/sites-enabled/default
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# إنشاء مجلدات التخزين المؤقتة وضمان وجودها
-RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
-    && mkdir -p /var/www/html/public/uploads \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/public /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/public /var/www/html/bootstrap/cache
-RUN mkdir -p /var/www/html/storage/app/livewire-tmp && chown -R www-data:www-data /var/www/html/storage
-# إنشاء مجلدات التخزين المؤقتة لـ Livewire و Filament
-RUN mkdir -p /var/www/html/storage/app/livewire-tmp \
-    && mkdir -p /var/www/html/storage/debugbar \
-    && chown -R www-data:www-data /var/www/html/storage \
-    && chmod -R 775 /var/www/html/storage
-
+# تشغيل السيرفر
 CMD ["sh", "-c", "service nginx start && php-fpm"]

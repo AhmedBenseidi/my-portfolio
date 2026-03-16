@@ -8,38 +8,25 @@ use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // مشاركة متغير اللغة مع جميع القوالب (Blade Views)
+        // مشاركة لغة الموقع
         view()->share('isAr', app()->getLocale() === 'ar');
 
-        // إعدادات خاصة ببيئة الإنتاج (Production) على Railway
         if (app()->environment('production')) {
-
-            // 1. إجبار النظام على استخدام HTTPS
-            // هذا ضروري جداً لضمان عمل روابط الصور والملفات بشكل آمن
+            // 1. إجبار استخدام HTTPS لروابط الصور والرفع
             URL::forceScheme('https');
 
-            // 2. ضبط قرص التخزين المؤقت لـ Livewire
-            // نقوم بضبطه برمجياً هنا لضمان تخطي أي كاش (Cache) قديم
-            Config::set('livewire.temporary_file_upload.disk', 'cloudinary');
+            // 2. استخدام القرص المحلي للرفع المؤقت لضمان الاستقرار
+            Config::set('livewire.temporary_file_upload.disk', 'local');
 
-            // 3. تحديد مجلد المرفقات المؤقتة داخل Cloudinary
+            // 3. تحديد مجلد الرفع المؤقت داخل storage/app
             Config::set('livewire.temporary_file_upload.directory', 'livewire-tmp');
-
-            // 4. ضبط وقت انتهاء صلاحية الروابط المؤقتة (اختياري لزيادة الأمان)
-            Config::set('livewire.temporary_file_upload.rules', 'file|mimes:png,jpg,jpeg,gif|max:12288');
         }
     }
 }
