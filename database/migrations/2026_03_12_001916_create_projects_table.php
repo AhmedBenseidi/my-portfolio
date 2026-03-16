@@ -18,16 +18,16 @@ return new class extends Migration
             $table->string('title');
 
             // وصف المشروع
-            $table->string('thumbnail')->nullable()->after('description');
+            $table->text('description')->nullable();
 
-            // رابط الصورة من Cloudinary (نصي)
-            $table->string('thumbnail');
+            // رابط الصورة أو مسار التخزين (nullable)
+            $table->string('thumbnail')->nullable();
 
             // رابط خارجي (GitHub أو موقع المشروع)
             $table->string('link')->nullable();
 
             // التقنيات المستخدمة (نخزنها كـ JSON Array)
-            $table->json('tags');
+            $table->json('tags')->nullable();
 
             // تاريخ الإنشاء والتعديل
             $table->timestamps();
@@ -39,8 +39,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-           Schema::table('projects', function (Blueprint $table) {
-            $table->dropColumn('thumbnail');
-        });
+        Schema::dropIfExists('projects');
     }
 };
+

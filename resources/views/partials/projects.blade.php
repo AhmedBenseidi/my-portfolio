@@ -55,7 +55,7 @@
                     {{-- صورة المشروع مع تأثير الـ Hover --}}
                     <div class="relative h-64 overflow-hidden bg-slate-100 dark:bg-slate-800">
                         @if ($project->thumbnail)
-                            <img src="{{ asset('storage/' . $project->thumbnail) }}" alt="{{ $project->title }}"
+                            <img src="{{ asset($project->thumbnail) }}" alt="{{ $project->title }}"
                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         @endif
 
