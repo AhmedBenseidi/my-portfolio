@@ -1,10 +1,7 @@
 <?php
 
 return [
-
     'cloud_url' => env('CLOUDINARY_URL'),
-
-    'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
 
     'cloud' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
@@ -12,4 +9,5 @@ return [
         'api_secret' => env('CLOUDINARY_API_SECRET'),
     ],
 
+    'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
 ];
