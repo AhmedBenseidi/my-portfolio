@@ -15,8 +15,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install pdo_mysql gd
 
 # نسخ إعدادات Nginx التي أرسلتها أنت (تأكد من تسمية ملفك nginx.conf)
-COPY nginx.conf /etc/nginx/sites-available/default
-
+COPY nginx.conf /etc/nginx/sites-enabled/default
 # نسخ ملفات المشروع
 WORKDIR /var/www/html
 COPY . .
