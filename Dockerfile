@@ -1,5 +1,8 @@
 FROM php:8.2-fpm
 
+# 1. تثبيت Node.js (نحتاجه لعمل Vite Build)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
 # تثبيت المكتبات النظامية المطلوبة للإضافات
 RUN apt-get update && apt-get install -y \
     nginx \
@@ -28,3 +31,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # تأكد من تشغيل Nginx و PHP-FPM بشكل صحيح في النهاية
 CMD service nginx start && php-fpm
+CMD ["sh", "-c", "service nginx start && php-fpm"]
