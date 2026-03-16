@@ -40,5 +40,7 @@ RUN mkdir -p /var/www/html/storage/app/public \
 # إعداد Nginx
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
+RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 127.0.0.1:8080|g' /usr/local/etc/php-fpm.d/www.conf
+
 # تشغيل السيرفر
 CMD ["sh", "-c", "service nginx start && php-fpm"]
