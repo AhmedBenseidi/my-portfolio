@@ -48,7 +48,9 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-install-cmd": [
-            "Illuminate\\Foundation\\ComposerScripts::postInstall"
+"Illuminate\\Foundation\\ComposerScripts::postInstall",
+    "@php artisan config:clear --ansi || true",
+    "@php artisan cache:clear --ansi || true"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

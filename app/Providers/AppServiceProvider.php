@@ -15,24 +15,22 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // مشاركة لغة الموقع
         view()->share('isAr', app()->getLocale() === 'ar');
 
-        if (app()->environment('production') || config('app.env') === 'production') {
-            // 1. إجبار استخدام HTTPS لروابط الصور والرفع لضمان الأمان
+        if (app()->environment('production')) {
             URL::forceScheme('https');
 
-            // 2. حل جذري: حقن إعدادات Cloudinary يدوياً لضمان وجود مفتاح "cloud" و "key"
-            Config::set('cloudinary.cloud.cloud_name', env('CLOUDINARY_CLOUD_NAME'));
-            Config::set('cloudinary.cloud.api_key', env('CLOUDINARY_API_KEY'));
-            Config::set('cloudinary.cloud.api_secret', env('CLOUDINARY_API_SECRET'));
+            // حقن الإعدادات برمجياً لضمان وجود مفتاح "cloud" ومفتاح "key"
+            // هذا الحل يمنع خطأ Undefined array key "key" نهائياً
+            Config::set('cloudinary.cloud', [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+                'key'        => env('CLOUDINARY_API_KEY'), // إضافة 'key' كاحتياط لبعض نسخ الحزمة
+            ]);
 
-            // احتياط إضافي لبعض نسخ الحزمة التي تبحث عن كلمة "key" مباشرة
-            Config::set('cloudinary.cloud.key', env('CLOUDINARY_API_KEY'));
-
-            // 3. ضبط القرص المحلي للرفع المؤقت لضمان استقرار Livewire
+            // إعدادات الرفع لـ Livewire
             Config::set('livewire.temporary_file_upload.disk', 'local');
-            Config::set('livewire.temporary_file_upload.directory', 'livewire-tmp');
         }
     }
 }
