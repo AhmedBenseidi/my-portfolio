@@ -2,7 +2,6 @@
 
 return [
 
-    // نعتمد على local كافتراضي للتخزين المؤقت، بينما نستخدم cloudinary للمشاريع
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     'disks' => [
@@ -21,12 +20,17 @@ return [
             'throw' => false,
         ],
 
-        // تعريف قرص Cloudinary
         'cloudinary' => [
             'driver' => 'cloudinary',
             'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
             'api_key' => env('CLOUDINARY_API_KEY'),
             'api_secret' => env('CLOUDINARY_API_SECRET'),
+            // دمج مصفوفة cloud هنا هو المفتاح لحل خطأ Undefined array key
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key' => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
         ],
 
     ],

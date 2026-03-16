@@ -11,13 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // الثقة في بروكسي Railway لمنع أخطاء التوجيه
+        // الثقة في البروكسيات لضمان استقرار روابط HTTPS وطلبات الرفع
         $middleware->trustProxies(at: '*');
 
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
         ]);
 
+        // استثناء مسارات Livewire الحيوية من حماية CSRF
         $middleware->validateCsrfTokens(except: [
             'livewire/upload-file',
             'livewire/update',
