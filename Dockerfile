@@ -37,5 +37,5 @@ RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
     && mkdir -p /var/www/html/public/uploads \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/public /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/public /var/www/html/bootstrap/cache
-
+RUN mkdir -p /var/www/html/storage/app/livewire-tmp && chown -R www-data:www-data /var/www/html/storage
 CMD ["sh", "-c", "service nginx start && php-fpm"]
