@@ -1,31 +1,30 @@
 FROM php:8.2-fpm
 
-# تثبيت الإضافات اللازمة لـ Laravel و Nginx
+# تثبيت المكتبات النظامية المطلوبة للإضافات
 RUN apt-get update && apt-get install -y \
     nginx \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libicu-dev \
+    libzip-dev \
     zip \
     unzip \
     git \
-    curl
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql gd intl zip
 
-# تثبيت إضافات PHP
-RUN docker-php-ext-install pdo_mysql gd
-
-# نسخ إعدادات Nginx التي أرسلتها أنت (تأكد من تسمية ملفك nginx.conf)
+# بقية الملف كما هي...
 COPY nginx.conf /etc/nginx/sites-enabled/default
-# نسخ ملفات المشروع
+
 WORKDIR /var/www/html
 COPY . .
 
-# تثبيت مكتبات Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# إعطاء الصلاحيات لمجلدات Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# تشغيل PHP-FPM و Nginx معاً
+# تأكد من تشغيل Nginx و PHP-FPM بشكل صحيح في النهاية
 CMD service nginx start && php-fpm
