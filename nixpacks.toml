@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["...", "php82Extensions.intl", "php82Extensions.zip"]
-
-[variables]
-PHP_VERSION = "8.2"
