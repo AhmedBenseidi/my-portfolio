@@ -1,12 +1,11 @@
 FROM php:8.2-fpm
 
-# تثبيت الاعتمادات وتثبيت Node.js
+# تثبيت الاعتمادات و Node.js
 RUN apt-get update && apt-get install -y \
     nginx \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
-    libicu-dev \
     libzip-dev \
     zip \
     unzip \
@@ -15,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd intl zip
+    && docker-php-ext-install pdo_mysql gd zip
 
 WORKDIR /var/www/html
 COPY . .
@@ -24,22 +23,21 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# بناء ملفات Vite (لحل مشكلة الـ Manifest)
+# بناء ملفات Vite
 RUN npm install && npm run build
 
-# إنشاء المجلدات المؤقتة ومنح الصلاحيات (حل مشكلة الرفع)
-RUN mkdir -p /var/www/html/storage/app/public \
-    && mkdir -p /var/www/html/storage/app/livewire-tmp \
-    && mkdir -p /var/www/html/storage/framework/views \
-    && mkdir -p /var/www/html/storage/framework/cache \
-    && mkdir -p /var/www/html/storage/framework/sessions \
-    && mkdir -p /var/www/html/bootstrap/cache \
+# --- الجزء الحاسم للإصلاح ---
+# 1. ضبط PHP-FPM للاستماع على المنفذ 9000 بدلاً من الـ Socket
+RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf || \
+    sed -i 's|listen = 127.0.0.1:9000|listen = 9000|g' /usr/local/etc/php-fpm.d/www.conf
+
+# 2. إنشاء مجلدات الرفع ومنح الصلاحيات
+RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 # إعداد Nginx
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
-RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf
-# تشغيل السيرفر
-CMD ["sh", "-c", "service nginx start && php-fpm"]
+# تشغيل السيرفرين معاً
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
