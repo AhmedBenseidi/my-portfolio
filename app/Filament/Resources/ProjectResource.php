@@ -45,15 +45,14 @@ class ProjectResource extends Resource
                             ->required()
                             ->columnSpanFull(),
 
-                        // FileUpload يخزن مؤقتًا في disk public ثم نرفع إلى Cloudinary في صفحات Create/Edit
+                        // الحل الجذري: الرفع مباشرة إلى Cloudinary لتجنب مشاكل الصلاحيات في Railway
                         FileUpload::make('thumbnail')
                             ->label('صورة المشروع')
                             ->image()
-                            ->disk('public')
-                            ->directory('uploads/projects')
-                            ->preserveFilenames()
+                            ->disk('cloudinary') // تغيير القرص إلى cloudinary
+                            ->directory('projects')
                             ->visibility('public')
-                            ->maxSize(2048) // 2MB حد أقصى (يمكن تغييره)
+                            ->maxSize(5120) // رفع الحد لـ 5 ميجا لضمان الراحة في الرفع
                             ->imagePreviewHeight(120)
                             ->required(),
 
@@ -70,20 +69,19 @@ class ProjectResource extends Resource
     {
         return $table
             ->columns([
-                // ImageColumn يعرض الصورة سواء كانت رابط Cloudinary أو مسار محلي
                 ImageColumn::make('thumbnail')
                     ->label('الصورة')
                     ->getStateUsing(function ($record) {
-                        // إذا الحقل يحتوي على رابط كامل (http/https) نعرضه مباشرة
-                        $value = $record->thumbnail ?? null;
-                        if (! $value) {
-                            return null;
-                        }
+                        $value = $record->thumbnail;
+                        if (!$value) return null;
+
+                        // إذا كان الرابط يبدأ بـ http، نعرضه كما هو (رابط Cloudinary)
                         if (is_string($value) && (str_starts_with($value, 'http://') || str_starts_with($value, 'https://'))) {
                             return $value;
                         }
-                        // وإلا نفترض أنه مسار داخل disk public
-                        return $value ? asset('storage/' . ltrim($value, '/')) : null;
+
+                        // في حال وجود صور قديمة مخزنة محلياً
+                        return asset('storage/' . ltrim($value, '/'));
                     })
                     ->rounded(),
 
