@@ -7,10 +7,10 @@ return [
     'lazy_placeholder' => null,
 
     'temporary_file_upload' => [
-        'disk' => 'local', // تم التغيير إلى local لضمان الصلاحيات
+        'disk' => 'local',
         'rules' => 'file|mimes:png,jpg,jpeg,gif|max:12288',
         'directory' => 'livewire-tmp',
-        'middleware' => 'web',
+        'middleware' => ['web'], // تم التأكد من أنها مصفوفة
     ],
 
     'render_on_redirect' => false,

@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,15 +17,9 @@ class AppServiceProvider extends ServiceProvider
         // مشاركة لغة الموقع
         view()->share('isAr', app()->getLocale() === 'ar');
 
-        if (app()->environment('production')) {
-            // 1. إجبار استخدام HTTPS لروابط الصور والرفع
+        // إجبار HTTPS في بيئة الإنتاج لضمان عمل Signed URLs (ضروري للرفع)
+        if (app()->environment('production') || config('app.env') === 'production') {
             URL::forceScheme('https');
-
-            // 2. استخدام القرص المحلي للرفع المؤقت لضمان الاستقرار
-            Config::set('livewire.temporary_file_upload.disk', 'local');
-
-            // 3. تحديد مجلد الرفع المؤقت داخل storage/app
-            Config::set('livewire.temporary_file_upload.directory', 'livewire-tmp');
         }
     }
 }

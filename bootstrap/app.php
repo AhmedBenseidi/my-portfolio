@@ -11,13 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // 1. إضافة Middleware اللغة كما كان سابقاً
+        // 1. الثقة في البروكسي (حل مشكلة التوقيع Signed URL في Railway)
+        $middleware->trustProxies(at: '*');
+
+        // 2. إضافة Middleware اللغة
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
         ]);
 
-        // 2. استثناء مسار رفع الملفات من حماية CSRF
-        // هذا التعديل ضروري جداً لنجاح رفع الصور إلى Cloudinary عبر Livewire في بيئة Railway
+        // 3. استثناء مسار الرفع من CSRF لضمان عدم رفض الطلب
         $middleware->validateCsrfTokens(except: [
             'livewire/upload-file',
         ]);
