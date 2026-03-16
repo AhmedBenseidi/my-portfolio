@@ -25,24 +25,25 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# بناء ملفات Vite (لضمان ظهور التصميم)
+# بناء ملفات Vite
 RUN npm install && npm run build
 
-# --- الجزء الحاسم للإصلاح ---
-# 1. ضبط PHP-FPM للاستماع على المنفذ 9000 بدلاً من الـ Socket ليتوافق مع Nginx
+# --- ضبط الإعدادات الداخلية ---
+# 1. ضبط PHP-FPM للاستماع على المنفذ 9000
 RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf || \
     sed -i 's|listen = 127.0.0.1:9000|listen = 9000|g' /usr/local/etc/php-fpm.d/www.conf
 
-# 2. إنشاء مجلدات الرفع ومنح الصلاحيات الكاملة (حل مشكلة الرفع في Filament)
+# 2. إنشاء مجلدات التخزين المؤقت ومنح الصلاحيات الكاملة لـ www-data
 RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
     && mkdir -p /var/www/html/storage/framework/views \
     && mkdir -p /var/www/html/storage/framework/cache \
     && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 # إعداد Nginx
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
-# تشغيل السيرفرين معاً لضمان عدم توقف الحاوية
+# تشغيل السيرفرين
 CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
