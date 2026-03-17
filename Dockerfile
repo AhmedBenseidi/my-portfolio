@@ -46,4 +46,4 @@ RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
 # تشغيل السيرفرين
-CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "php artisan config:clear && php-fpm -D && nginx -g 'daemon off;'"]

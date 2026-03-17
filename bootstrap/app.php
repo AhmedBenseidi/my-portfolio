@@ -3,7 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Support\Facades\Config; // أضف هذا السطر
+use Illuminate\Support\Facades\Config;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,15 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->booting(function () {
-        // يتم تنفيذ هذا الكود قبل تحميل الـ Service Providers
-        // وهو الحل الوحيد لضمان عدم ظهور خطأ Undefined array key "key"
+        // حقن الإعدادات في الذاكرة فوراً عند إقلاع التطبيق
         $apiKey = env('CLOUDINARY_API_KEY');
 
-        config([
-            'cloudinary.cloud.key' => $apiKey,
-            'cloudinary.cloud.api_key' => $apiKey,
-            'cloudinary.cloud.cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-            'cloudinary.cloud.api_secret' => env('CLOUDINARY_API_SECRET'),
-        ]);
+        Config::set('cloudinary.cloud.key', $apiKey);
+        Config::set('cloudinary.cloud.api_key', $apiKey);
+        Config::set('cloudinary.cloud.cloud_name', env('CLOUDINARY_CLOUD_NAME'));
+        Config::set('cloudinary.cloud.api_secret', env('CLOUDINARY_API_SECRET'));
     })
     ->create();
