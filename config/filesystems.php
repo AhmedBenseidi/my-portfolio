@@ -20,9 +20,9 @@ return [
             'throw' => false,
         ],
 
-'cloudinary' => [
-    'driver' => 'cloudinary',
-],
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+        ],
 
     ],
 
