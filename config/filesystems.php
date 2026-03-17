@@ -19,9 +19,19 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-    'cloudinary' => [
-        'driver' => 'cloudinary',
-    ],
+
+        // التعديل هنا: يجب إعطاء الـ Driver كل الإعدادات التي يطلبها
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'cloud_url' => env('CLOUDINARY_URL'),
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+                'key'        => env('CLOUDINARY_API_KEY'), // ضروري جداً لتجنب خطأ السطر 30
+            ],
+            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+        ],
 
     ],
 

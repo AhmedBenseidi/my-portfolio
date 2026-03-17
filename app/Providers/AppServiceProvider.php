@@ -19,12 +19,9 @@ class AppServiceProvider extends ServiceProvider
 
         if (app()->environment('production')) {
             URL::forceScheme('https');
-
-            // تأكيد إضافي للمفاتيح
-            Config::set('cloudinary.cloud.key', env('CLOUDINARY_API_KEY'));
         }
 
-        // إعدادات الرفع لـ Livewire
+        // إعدادات الرفع لـ Livewire فقط
         Config::set('livewire.temporary_file_upload.disk', 'local');
     }
 }
