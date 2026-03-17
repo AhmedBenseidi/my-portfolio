@@ -15,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })
-    ->create();
+    //
+})
+->booting(function () {
+    // هذا الكود يضمن حقن المفاتيح في الذاكرة فور تشغيل التطبيق
+    $apiKey = env('CLOUDINARY_API_KEY');
+    config([
+        'cloudinary.cloud.key' => $apiKey,
+        'cloudinary.cloud.api_key' => $apiKey,
+    ]);
+})
+->create();
