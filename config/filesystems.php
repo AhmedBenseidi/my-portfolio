@@ -20,17 +20,19 @@ return [
             'throw' => false,
         ],
 
-        'cloudinary' => [
-              'driver' => 'cloudinary',
-              'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-              'api_key'    => env('CLOUDINARY_API_KEY'),
-              'api_secret' => env('CLOUDINARY_API_SECRET'),
-    // الحزمة في بعض الإصدارات تبحث عن كلمة cloud كمصفوفة داخل القرص
-            'cloud' => [
-            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-            'api_key'    => env('CLOUDINARY_API_KEY'),
-            'api_secret' => env('CLOUDINARY_API_SECRET'),
-                        ],
+'cloudinary' => [
+    'driver' => 'cloudinary',
+    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+    'api_key'    => env('CLOUDINARY_API_KEY'),
+    'api_secret' => env('CLOUDINARY_API_SECRET'),
+    // الحل السحري: إضافة مصفوفة cloud هنا أيضاً
+    'cloud' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+        'key'        => env('CLOUDINARY_API_KEY'),
+        'secret'     => env('CLOUDINARY_API_SECRET'),
+    ],
 ],
 
     ],
