@@ -19,10 +19,9 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-'cloudinary' => [
-    'driver' => 'cloudinary',
-    'cloud_url' => env('CLOUDINARY_URL'), // هذا الرابط يحتوي على كل شيء (المفتاح، السر، واسم السحابة)
-],
+    'cloudinary' => [
+        'driver' => 'cloudinary',
+    ],
 
     ],
 
