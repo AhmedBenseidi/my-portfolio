@@ -20,20 +20,25 @@ return [
             'throw' => false,
         ],
 
-        'cloudinary' => [
-            'driver' => 'cloudinary',
-            'cloud_url' => env('CLOUDINARY_URL'),
-            'cloud' => [
-                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-                'api_key'    => env('CLOUDINARY_API_KEY'),
-                'api_secret' => env('CLOUDINARY_API_SECRET'),
-                // أضفنا key هنا لأن الحزمة تبحث عنه داخل مصفوفة cloud
-                'key'        => env('CLOUDINARY_API_KEY'),
-            ],
-            // وأضفنا key هنا أيضاً كاحتياط إضافي
-            'key' => env('CLOUDINARY_API_KEY'),
-            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+            'cloudinary' => [
+        'driver' => 'cloudinary',
+        'cloud_url' => env('CLOUDINARY_URL'),
+
+        // الحزمة تبحث داخل مصفوفة cloud عن هذه المفاتيح
+        'cloud' => [
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'api_key'    => env('CLOUDINARY_API_KEY'),
+            'api_secret' => env('CLOUDINARY_API_SECRET'),
+            'key'        => env('CLOUDINARY_API_KEY'),    // لسطر 30 في الحزمة
+            'secret'     => env('CLOUDINARY_API_SECRET'), // لسطر 31 في الحزمة (الخطأ الحالي)
         ],
+
+        // احتياط إضافي في حال بحثت الحزمة في المستوى الأول
+        'key'    => env('CLOUDINARY_API_KEY'),
+        'secret' => env('CLOUDINARY_API_SECRET'),
+
+        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+    ],
 
     ],
 
