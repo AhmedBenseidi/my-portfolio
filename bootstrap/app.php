@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Config; // أضف هذا السطر
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,19 +12,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // الثقة في جميع البروكسيات ضرورية لبيئة Railway لضمان عمل الرفع بشكل صحيح
-        $middleware->trustProxies(at: '*');
-
-        $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
-        ]);
-
-        $middleware->validateCsrfTokens(except: [
-            'livewire/upload-file',
-            'livewire/update', // استثناء تحديثات Livewire من حماية CSRF لزيادة الاستقرار
-        ]);
+        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
+    })
+    ->booting(function () {
+        // يتم تنفيذ هذا الكود قبل تحميل الـ Service Providers
+        // وهو الحل الوحيد لضمان عدم ظهور خطأ Undefined array key "key"
+        $apiKey = env('CLOUDINARY_API_KEY');
+
+        config([
+            'cloudinary.cloud.key' => $apiKey,
+            'cloudinary.cloud.api_key' => $apiKey,
+            'cloudinary.cloud.cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'cloudinary.cloud.api_secret' => env('CLOUDINARY_API_SECRET'),
+        ]);
     })
     ->create();
