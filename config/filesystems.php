@@ -22,8 +22,6 @@ return [
 
 'cloudinary' => [
     'driver' => 'cloudinary',
-    'cloud_url' => env('CLOUDINARY_URL'),
-    // الحزمة ستقرأ الإعدادات من cloudinary.php تلقائياً إذا كان هذا القرص بسيطاً
 ],
 
     ],
