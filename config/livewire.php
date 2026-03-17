@@ -7,11 +7,11 @@ return [
     'lazy_placeholder' => null,
 
     'temporary_file_upload' => [
-        'disk' => 'local',
-        'rules' => 'file|mimes:png,jpg,jpeg,gif|max:12288',
-        'directory' => 'livewire-tmp',
-        'middleware' => ['web'], // تم التأكد من أنها مصفوفة
-    ],
+    'disk' => 'local', // تأكد أنها local
+    'rules' => 'file|mimes:png,jpg,jpeg,gif|max:12288',
+    'directory' => 'livewire-tmp',
+    'middleware' => ['web'],
+],
 
     'render_on_redirect' => false,
     'legacy_model_binding' => false,

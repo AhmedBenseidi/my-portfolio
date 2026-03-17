@@ -34,13 +34,12 @@ RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 127.0.0.1:9000|g' /usr/
     sed -i 's|listen = 127.0.0.1:9000|listen = 9000|g' /usr/local/etc/php-fpm.d/www.conf
 
 # 2. إنشاء مجلدات التخزين المؤقت ومنح الصلاحيات الكاملة لـ www-data
-RUN mkdir -p /var/www/html/storage/app/public/livewire-tmp \
+RUN mkdir -p /var/www/html/storage/app/livewire-tmp \
+    && mkdir -p /var/www/html/storage/framework/sessions \
     && mkdir -p /var/www/html/storage/framework/views \
     && mkdir -p /var/www/html/storage/framework/cache \
-    && mkdir -p /var/www/html/storage/framework/sessions \
-    && mkdir -p /var/www/html/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage
 
 # إعداد Nginx
 COPY nginx.conf /etc/nginx/sites-enabled/default
