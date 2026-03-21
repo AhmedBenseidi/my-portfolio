@@ -15,6 +15,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ProjectResource extends Resource
 {
@@ -45,16 +47,46 @@ class ProjectResource extends Resource
                             ->required()
                             ->columnSpanFull(),
 
-                        // الحل الجذري: الرفع مباشرة إلى Cloudinary لتجنب مشاكل الصلاحيات في Railway
+                        // التعديل الجذري للرفع إلى ImgBB
                         FileUpload::make('thumbnail')
                             ->label('صورة المشروع')
                             ->image()
-                            ->disk('cloudinary') // تغيير القرص إلى cloudinary
-                            ->directory('projects')
-                            ->visibility('public')
-                            ->maxSize(5120) // رفع الحد لـ 5 ميجا لضمان الراحة في الرفع
+                            // نستخدم التخزين المحلي كجسر مؤقت للرفع
+                            ->disk('local')
+                            ->directory('temp-projects')
                             ->imagePreviewHeight(120)
-                            ->required(),
+                            ->required()
+                            // دالة المعالجة قبل الحفظ في قاعدة البيانات
+                            ->saveRelationshipsUsing(static function ($component, $state, $record) {
+                                if (! $state) return;
+
+                                try {
+                                    // الحصول على مسار الملف المؤقت في الحاوية
+                                    $filePath = storage_path('app/local/' . $state);
+
+                                    if (file_exists($filePath)) {
+                                        // الرفع إلى ImgBB API
+                                        $response = Http::asMultipart()
+                                            ->post('https://api.imgbb.com/1/upload?key=' . env('IMGBB_API_KEY'), [
+                                                'image' => base64_encode(file_get_contents($filePath)),
+                                            ]);
+
+                                        if ($response->successful()) {
+                                            $remoteUrl = $response->json('data.url');
+
+                                            // تحديث السجل برابط الصورة المباشر
+                                            $record->update(['thumbnail' => $remoteUrl]);
+
+                                            // حذف الملف المؤقت لتوفير المساحة في Railway
+                                            @unlink($filePath);
+                                        } else {
+                                            Log::error('ImgBB Upload Failed: ' . $response->body());
+                                        }
+                                    }
+                                } catch (\Exception $e) {
+                                    Log::error('ImgBB Integration Error: ' . $e->getMessage());
+                                }
+                            }),
 
                         TagsInput::make('tags')
                             ->label('التقنيات المستخدمة')
@@ -72,18 +104,10 @@ class ProjectResource extends Resource
                 ImageColumn::make('thumbnail')
                     ->label('الصورة')
                     ->getStateUsing(function ($record) {
-                        $value = $record->thumbnail;
-                        if (!$value) return null;
-
-                        // إذا كان الرابط يبدأ بـ http، نعرضه كما هو (رابط Cloudinary)
-                        if (is_string($value) && (str_starts_with($value, 'http://') || str_starts_with($value, 'https://'))) {
-                            return $value;
-                        }
-
-                        // في حال وجود صور قديمة مخزنة محلياً
-                        return asset('storage/' . ltrim($value, '/'));
+                        // بما أننا نخزن الرابط كاملاً، نعيده كما هو
+                        return $record->thumbnail;
                     })
-                    ->rounded(),
+                    ->circular(),
 
                 TextColumn::make('title')
                     ->label('العنوان')
@@ -93,7 +117,7 @@ class ProjectResource extends Resource
                 TextColumn::make('tags')
                     ->label('التقنيات')
                     ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
-                    ->toggleable(),
+                    ->badge(),
 
                 TextColumn::make('created_at')
                     ->label('تاريخ الإضافة')
