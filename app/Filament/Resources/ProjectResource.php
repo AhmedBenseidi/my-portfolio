@@ -17,6 +17,7 @@ use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Arr;
 
 class ProjectResource extends Resource
 {
@@ -40,13 +41,16 @@ class ProjectResource extends Resource
                             ->disk('imgbb_temp')
                             ->directory('uploads')
                             ->required()
-                            // هذا هو الجزء الذي كان ينقصك: تحويل المسار لرابط قبل الحفظ
                             ->dehydrateStateUsing(function ($state) {
-                                if (! $state || str_starts_with($state, 'http')) {
-                                    return $state;
+                                // حل المشكلة: تحويل المصفوفة إلى نص إذا كانت مصفوفة
+                                $actualState = is_array($state) ? Arr::first($state) : $state;
+
+                                // إذا كان فارغاً أو كان رابطاً جاهزاً (بدءاً بـ http) لا تفعل شيئاً
+                                if (! $actualState || (is_string($actualState) && str_starts_with($actualState, 'http'))) {
+                                    return $actualState;
                                 }
 
-                                $path = storage_path('app/imgbb_temp/' . $state);
+                                $path = storage_path('app/imgbb_temp/' . $actualState);
 
                                 if (file_exists($path)) {
                                     $response = Http::asMultipart()
@@ -56,11 +60,11 @@ class ProjectResource extends Resource
 
                                     if ($response->successful()) {
                                         $url = $response->json('data.url');
-                                        @unlink($path); // حذف الملف المؤقت
-                                        return $url; // سيتم حفظ الرابط بدلاً من المسار المحلي
+                                        @unlink($path);
+                                        return $url;
                                     }
                                 }
-                                return $state;
+                                return $actualState;
                             }),
 
                         TagsInput::make('tags')->label('التقنيات')->separator(','),
@@ -78,7 +82,10 @@ class ProjectResource extends Resource
                 TextColumn::make('title')->label('العنوان')->searchable(),
                 TextColumn::make('tags')->label('التقنيات')->badge(),
             ])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ]);
     }
 
     public static function getPages(): array
