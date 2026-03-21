@@ -16,49 +16,35 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
 
 class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = 'المشاريع';
-    protected static ?string $modelLabel = 'مشروع';
-    protected static ?string $pluralModelLabel = 'المشاريع';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make('معلومات المشروع الأساسية')
+                Section::make('معلومات المشروع')
                     ->schema([
-                        TextInput::make('title')
-                            ->label('عنوان المشروع')
-                            ->required()
-                            ->maxLength(255),
+                        TextInput::make('title')->label('العنوان')->required(),
+                        TextInput::make('link')->label('رابط المشروع')->url(),
+                        Textarea::make('description')->label('الوصف')->required()->columnSpanFull(),
 
-                        TextInput::make('link')
-                            ->label('رابط المشروع')
-                            ->url(),
-
-                        Textarea::make('description')
-                            ->label('وصف المشروع')
-                            ->required()
-                            ->columnSpanFull(),
-                    ])->columns(2),
-
-                Section::make('الوسائط والتقنيات')
-                    ->schema([
                         FileUpload::make('thumbnail')
                             ->label('صورة المشروع')
                             ->image()
                             ->disk('imgbb_temp')
                             ->directory('uploads')
                             ->required()
-                            ->afterStateUpdated(function ($state, $set) {
-                                if (! $state) return;
+                            // هذا هو الجزء الذي كان ينقصك: تحويل المسار لرابط قبل الحفظ
+                            ->dehydrateStateUsing(function ($state) {
+                                if (! $state || str_starts_with($state, 'http')) {
+                                    return $state;
+                                }
 
                                 $path = storage_path('app/imgbb_temp/' . $state);
 
@@ -69,22 +55,16 @@ class ProjectResource extends Resource
                                         ]);
 
                                     if ($response->successful()) {
-                                        $imageUrl = $response->json('data.url');
-                                        $set('thumbnail', $imageUrl);
-                                        @unlink($path);
-                                    } else {
-                                        Notification::make()
-                                            ->title('خطأ في الرفع')
-                                            ->danger()
-                                            ->send();
+                                        $url = $response->json('data.url');
+                                        @unlink($path); // حذف الملف المؤقت
+                                        return $url; // سيتم حفظ الرابط بدلاً من المسار المحلي
                                     }
                                 }
+                                return $state;
                             }),
 
-                        TagsInput::make('tags')
-                            ->label('التقنيات')
-                            ->separator(','),
-                    ])->columns(1)
+                        TagsInput::make('tags')->label('التقنيات')->separator(','),
+                    ])->columns(2)
             ]);
     }
 
@@ -95,24 +75,10 @@ class ProjectResource extends Resource
                 ImageColumn::make('thumbnail')
                     ->label('الصورة')
                     ->circular(),
-
-                TextColumn::make('title')
-                    ->label('العنوان')
-                    ->searchable(),
-
-                TextColumn::make('tags')
-                    ->label('التقنيات')
-                    ->badge(),
+                TextColumn::make('title')->label('العنوان')->searchable(),
+                TextColumn::make('tags')->label('التقنيات')->badge(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 
     public static function getPages(): array
