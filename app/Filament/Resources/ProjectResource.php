@@ -13,10 +13,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class ProjectResource extends Resource
 {
@@ -31,69 +32,59 @@ class ProjectResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('تفاصيل المشروع')
+                Section::make('معلومات المشروع الأساسية')
                     ->schema([
                         TextInput::make('title')
                             ->label('عنوان المشروع')
-                            ->required(),
+                            ->required()
+                            ->maxLength(255),
 
                         TextInput::make('link')
                             ->label('رابط المشروع')
-                            ->url()
-                            ->nullable(),
+                            ->url(),
 
                         Textarea::make('description')
-                            ->label('الوصف')
+                            ->label('وصف المشروع')
                             ->required()
                             ->columnSpanFull(),
+                    ])->columns(2),
 
-                        // التعديل الجذري للرفع إلى ImgBB
+                Section::make('الوسائط والتقنيات')
+                    ->schema([
                         FileUpload::make('thumbnail')
                             ->label('صورة المشروع')
                             ->image()
-                            // نستخدم التخزين المحلي كجسر مؤقت للرفع
-                            ->disk('local')
-                            ->directory('temp-projects')
-                            ->imagePreviewHeight(120)
+                            ->disk('imgbb_temp')
+                            ->directory('uploads')
                             ->required()
-                            // دالة المعالجة قبل الحفظ في قاعدة البيانات
-                            ->saveRelationshipsUsing(static function ($component, $state, $record) {
+                            ->afterStateUpdated(function ($state, $set) {
                                 if (! $state) return;
 
-                                try {
-                                    // الحصول على مسار الملف المؤقت في الحاوية
-                                    $filePath = storage_path('app/local/' . $state);
+                                $path = storage_path('app/imgbb_temp/' . $state);
 
-                                    if (file_exists($filePath)) {
-                                        // الرفع إلى ImgBB API
-                                        $response = Http::asMultipart()
-                                            ->post('https://api.imgbb.com/1/upload?key=' . env('IMGBB_API_KEY'), [
-                                                'image' => base64_encode(file_get_contents($filePath)),
-                                            ]);
+                                if (file_exists($path)) {
+                                    $response = Http::asMultipart()
+                                        ->post('https://api.imgbb.com/1/upload?key=' . env('IMGBB_API_KEY'), [
+                                            'image' => base64_encode(file_get_contents($path)),
+                                        ]);
 
-                                        if ($response->successful()) {
-                                            $remoteUrl = $response->json('data.url');
-
-                                            // تحديث السجل برابط الصورة المباشر
-                                            $record->update(['thumbnail' => $remoteUrl]);
-
-                                            // حذف الملف المؤقت لتوفير المساحة في Railway
-                                            @unlink($filePath);
-                                        } else {
-                                            Log::error('ImgBB Upload Failed: ' . $response->body());
-                                        }
+                                    if ($response->successful()) {
+                                        $imageUrl = $response->json('data.url');
+                                        $set('thumbnail', $imageUrl);
+                                        @unlink($path);
+                                    } else {
+                                        Notification::make()
+                                            ->title('خطأ في الرفع')
+                                            ->danger()
+                                            ->send();
                                     }
-                                } catch (\Exception $e) {
-                                    Log::error('ImgBB Integration Error: ' . $e->getMessage());
                                 }
                             }),
 
                         TagsInput::make('tags')
-                            ->label('التقنيات المستخدمة')
-                            ->placeholder('أضف تقنية ثم اضغط Enter')
-                            ->separator(',')
-                            ->hint('يمكن إضافة عدة تقنيات'),
-                    ])->columns(2)
+                            ->label('التقنيات')
+                            ->separator(','),
+                    ])->columns(1)
             ]);
     }
 
@@ -103,26 +94,15 @@ class ProjectResource extends Resource
             ->columns([
                 ImageColumn::make('thumbnail')
                     ->label('الصورة')
-                    ->getStateUsing(function ($record) {
-                        // بما أننا نخزن الرابط كاملاً، نعيده كما هو
-                        return $record->thumbnail;
-                    })
                     ->circular(),
 
                 TextColumn::make('title')
                     ->label('العنوان')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
 
                 TextColumn::make('tags')
                     ->label('التقنيات')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
                     ->badge(),
-
-                TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
-                    ->dateTime()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

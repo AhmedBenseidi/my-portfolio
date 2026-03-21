@@ -19,7 +19,14 @@ class Project extends Model
     ];
 
     /**
-     * قمنا بإزالة الـ Mutator القديم الذي كان يجبر النظام على الرفع لمحلياً (public disk).
-     * الآن سيعتمد الموديل على القيمة القادمة من Filament مباشرة.
+     * دالة مساعدة للتأكد من الحصول على رابط الصورة بشكل صحيح دائماً
      */
+    public function getImageUrlAttribute()
+    {
+        if (filter_var($this->thumbnail, FILTER_VALIDATE_URL)) {
+            return $this->thumbnail;
+        }
+
+        return asset('storage/' . $this->thumbnail);
+    }
 }

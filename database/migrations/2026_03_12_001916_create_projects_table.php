@@ -13,23 +13,13 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-
-            // عنوان المشروع
             $table->string('title');
-
-            // وصف المشروع
             $table->text('description')->nullable();
 
-            // رابط الصورة أو مسار التخزين (nullable)
-            $table->string('thumbnail')->nullable();
+            $table->text('thumbnail')->nullable();
 
-            // رابط خارجي (GitHub أو موقع المشروع)
             $table->string('link')->nullable();
-
-            // التقنيات المستخدمة (نخزنها كـ JSON Array)
             $table->json('tags')->nullable();
-
-            // تاريخ الإنشاء والتعديل
             $table->timestamps();
         });
     }
@@ -42,4 +32,3 @@ return new class extends Migration
         Schema::dropIfExists('projects');
     }
 };
-
